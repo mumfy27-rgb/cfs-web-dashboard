@@ -40,15 +40,15 @@ def get_status_colour_name(status):
     status = str(status).upper()
 
     if status == "GOING":
-        return "red"
+        return "lime"
     if status == "RESPONDING":
         return "orange"
     if status == "MONITOR":
         return "yellow"
     if status == "COMPLETE":
-        return "lime"
+        return "white"
     if status == "CONTROLLED":
-        return "lime"
+        return "white"
 
     return "white"
 
