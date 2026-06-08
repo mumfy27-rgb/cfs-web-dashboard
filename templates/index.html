@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CFS Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <p>Last updated: {{ now }}</p>
+            <p>Total incidents: {{ incidents|length }}</p>
+        </div>
+
+        <h1>CFS Incident Dashboard</h1>
+
+        <div class="header-right">
+            <p>STATEWIDE</p>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="container">
+
+            {% for incident in incidents %}
+            <div class="incident"
+                 style="background-color: {{ incident.CardColour }};"
+                 onclick='selectCard(this, {{ incident|tojson }})'>
+
+                <h2>{{ incident.Type }}</h2>
+
+                <p>{{ incident.Location_name }}</p>
+
+                <p style="color: {{ incident.StatusColour }}">
+                    {{ incident.Status }}
+                </p>
+
+                <p style="color: {{ incident.AgeColour }}">
+                    Age: {{ incident.Age }}
+                </p>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <div id="details-panel">
+
+            <h2>Incident Details</h2>
+
+            <p id="detail-type">Select an incident</p>
+            <p id="detail-location"></p>
+            <p id="detail-status"></p>
+            <p id="detail-age"></p>
+            <p id="detail-pager"></p>
+
+        </div>
+
+    </div>
+
+    <script>
+    function selectCard(card, incident) {
+
+        document.querySelectorAll(".incident").forEach(function(item) {
+            item.classList.remove("selected");
+        });
+
+        card.classList.add("selected");
+
+        document.getElementById("detail-type").innerText =
+            "Type: " + incident.Type;
+
+        document.getElementById("detail-location").innerText =
+            "Location: " + incident.Location_name;
+
+        document.getElementById("detail-status").innerText =
+            "Status: " + incident.Status;
+
+        document.getElementById("detail-age").innerText =
+            "Age: " + incident.Age;
+
+        document.getElementById("detail-pager").innerText =
+            "Pager Message: searching...";
+
+        fetch("/pager-match", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(incident)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("detail-pager").innerText =
+                "Pager Message: " + data.pager_message;
+        })
+        .catch(error => {
+            document.getElementById("detail-pager").innerText =
+                "Pager Message: pager lookup failed";
+        });
+    }
+    </script>
+
+</body>
+</html>
