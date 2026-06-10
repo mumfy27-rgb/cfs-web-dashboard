@@ -119,3 +119,34 @@ h1 {
 
 }
 
+.incident-wrapper {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+}
+
+.incident-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    flex: 1;
+}
+
+.scroll-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: #333;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.scroll-btn:hover {
+    background: #555;
+}
+
+
+

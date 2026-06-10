@@ -4,6 +4,7 @@
     <title>CFS Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
     <div class="header">
@@ -21,27 +22,35 @@
 
     <div class="main-content">
 
-        <div class="container">
+        <div class="incident-wrapper">
 
-            {% for incident in incidents %}
-            <div class="incident"
-                 style="background-color: {{ incident.CardColour }};"
-                 onclick='selectCard(this, {{ incident|tojson }})'>
+            <button class="scroll-btn" onclick="scrollLeftCards()">◀</button>
 
-                <h2>{{ incident.Type }}</h2>
+            <div class="incident-container" id="incidentContainer">
 
-                <p>{{ incident.Location_name }}</p>
+                {% for incident in incidents %}
+                <div class="incident"
+                     onclick='selectCard(this, {{ incident|tojson }})'
+                     style="background-color: {{ incident.CardColour }}">
 
-                <p style="color: {{ incident.StatusColour }}">
-                    {{ incident.Status }}
-                </p>
+                    <h2>{{ incident.Type }}</h2>
 
-                <p style="color: {{ incident.AgeColour }}">
-                    Age: {{ incident.Age }}
-                </p>
+                    <p>{{ incident.Location_name }}</p>
+
+                    <p style="color: {{ incident.StatusColour }}">
+                        {{ incident.Status }}
+                    </p>
+
+                    <p style="color: {{ incident.AgeColour }}">
+                        Age: {{ incident.Age }}
+                    </p>
+
+                </div>
+                {% endfor %}
 
             </div>
-            {% endfor %}
+
+            <button class="scroll-btn" onclick="scrollRightCards()">▶</button>
 
         </div>
 
@@ -60,46 +69,62 @@
     </div>
 
     <script>
-    function selectCard(card, incident) {
+        function selectCard(card, incident) {
 
-        document.querySelectorAll(".incident").forEach(function(item) {
-            item.classList.remove("selected");
-        });
+            document.querySelectorAll(".incident").forEach(function(item) {
+                item.classList.remove("selected");
+            });
 
-        card.classList.add("selected");
+            card.classList.add("selected");
 
-        document.getElementById("detail-type").innerText =
-            "Type: " + incident.Type;
+            document.getElementById("detail-type").innerText =
+                "Type: " + incident.Type;
 
-        document.getElementById("detail-location").innerText =
-            "Location: " + incident.Location_name;
+            document.getElementById("detail-location").innerText =
+                "Location: " + incident.Location_name;
 
-        document.getElementById("detail-status").innerText =
-            "Status: " + incident.Status;
+            document.getElementById("detail-status").innerText =
+                "Status: " + incident.Status;
 
-        document.getElementById("detail-age").innerText =
-            "Age: " + incident.Age;
+            document.getElementById("detail-age").innerText =
+                "Age: " + incident.Age;
 
-        document.getElementById("detail-pager").innerText =
-            "Pager Message: searching...";
-
-        fetch("/pager-match", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(incident)
-        })
-        .then(response => response.json())
-        .then(data => {
             document.getElementById("detail-pager").innerText =
-                "Pager Message: " + data.pager_message;
-        })
-        .catch(error => {
-            document.getElementById("detail-pager").innerText =
-                "Pager Message: pager lookup failed";
-        });
-    }
+                "Pager Message: searching...";
+
+            fetch("/pager-match", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(incident)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("detail-pager").innerText =
+                    "Pager Message: " + data.pager_message;
+            })
+            .catch(error => {
+                document.getElementById("detail-pager").innerText =
+                    "Pager Message: pager lookup failed";
+            });
+        }
+
+        function scrollLeftCards() {
+            document.getElementById("incidentContainer")
+                .scrollBy({
+                    left: -600,
+                    behavior: "smooth"
+                });
+        }
+
+        function scrollRightCards() {
+            document.getElementById("incidentContainer")
+                .scrollBy({
+                    left: 600,
+                    behavior: "smooth"
+                });
+        }
     </script>
 
 </body>
