@@ -34,7 +34,6 @@
                      style="background-color: {{ incident.CardColour }}">
 
                     <h2>{{ incident.Type }}</h2>
-
                     <p>{{ incident.Location_name }}</p>
 
                     <p style="color: {{ incident.StatusColour }}">
@@ -54,15 +53,33 @@
 
         </div>
 
-        <div id="details-panel">
+        <div class="details-map-row">
 
-            <h2>Incident Details</h2>
+            <div id="details-panel">
 
-            <p id="detail-type">Select an incident</p>
-            <p id="detail-location"></p>
-            <p id="detail-status"></p>
-            <p id="detail-age"></p>
-            <p id="detail-pager"></p>
+                <h2>Incident Details</h2>
+
+                <p id="detail-type">Select an incident</p>
+                <p id="detail-location"></p>
+                <p id="detail-status"></p>
+                <p id="detail-age"></p>
+                <p id="detail-pager"></p>
+
+            </div>
+
+            <div id="map-panel">
+
+                <h2>Map</h2>
+
+                <iframe
+                    id="incident-map"
+                    width="100%"
+                    height="300"
+                    style="border:0;"
+                    loading="lazy">
+                </iframe>
+
+            </div>
 
         </div>
 
@@ -88,6 +105,13 @@
 
             document.getElementById("detail-age").innerText =
                 "Age: " + incident.Age;
+
+            let mapLocation = incident.Location_name + ", South Australia, Australia";
+
+            document.getElementById("incident-map").src =
+                "https://www.google.com/maps?q=" +
+                encodeURIComponent(mapLocation) +
+                "&output=embed";
 
             document.getElementById("detail-pager").innerText =
                 "Pager Message: searching...";
