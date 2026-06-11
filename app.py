@@ -5,9 +5,7 @@ from datetime import datetime
 import requests
 from flask import Flask, render_template, jsonify, request
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
+
 
 from bs4 import BeautifulSoup
 
