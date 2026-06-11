@@ -1,6 +1,7 @@
 import time
 import threading
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 from flask import Flask, render_template, jsonify, request
@@ -15,6 +16,7 @@ app = Flask(__name__)
 CFS_INCIDENTS_URL = "https://data.eso.sa.gov.au/prod/cfs/criimson/cfs_current_incidents.json"
 PAGER_URL = "http://paging1.sacfs.org/cfs.php"
 PAGER_CACHE_SECONDS = 300
+SA_TZ = ZoneInfo("Australia/Adelaide")
 
 last_pager_message = "No pager message loaded yet."
 last_pager_fetch_time = 0
@@ -236,23 +238,23 @@ def find_matching_pager_message(pager_text, incident):
     return "No matching pager message found."
 
 def extract_resources_from_pager(pager_message):
-    if not pager_message or pager_message == "No matching pager message found.":
+    if pager_message == "No matching pager message found.":
         return empty_resources()
 
     message = str(pager_message)
 
-    # Remove response text at the end
-    for marker in [" - CFS", " - MFS", " - SES"]:
-        if marker in message:
-            message = message.split(marker)[0]
+    if ": -" in message:
+        message = message.split(": -")[0]
+    elif ":-" in message:
+        message = message.split(":-")[0]
 
-    parts = [part.strip() for part in message.split(":") if part.strip()]
-
-    if not parts:
+    if ":" not in message:
         return empty_resources()
 
-    # Last non-empty colon block is the resource block
-    raw_resources = parts[-1]
+    raw_resources = message.split(":")[-1].strip()
+
+    if not raw_resources:
+        return empty_resources()
 
     tokens = raw_resources.replace(",", " ").replace(";", " ").split()
 
@@ -266,12 +268,16 @@ def extract_resources_from_pager(pager_message):
         if not resource:
             continue
 
+        # Ignore dispatch desk
         if resource.startswith("AIRDESK"):
             continue
 
+        # Ignore bare numbers
         if resource.isdigit():
             continue
 
+        # Accept real-looking resource codes:
+        # WAIKURP, TLEM44, GLWAURP_R, RIDG_BW13, R1_GREEN
         looks_like_resource = (
             any(char.isdigit() for char in resource)
             or "_" in resource
@@ -315,8 +321,10 @@ def get_incident_age(incident):
             "%d/%m/%Y %H:%M"
         )
 
+        incident_datetime = incident_datetime.replace(tzinfo=SA_TZ)
+
         age_minutes = int(
-            (datetime.now() - incident_datetime).total_seconds() / 60
+            (datetime.now(SA_TZ) - incident_datetime).total_seconds() / 60
         )
 
         if age_minutes < 60:
@@ -346,8 +354,10 @@ def get_incident_age_colour(incident):
             "%d/%m/%Y %H:%M"
         )
 
+        incident_datetime = incident_datetime.replace(tzinfo=SA_TZ)
+
         age_minutes = int(
-            (datetime.now() - incident_datetime).total_seconds() / 60
+            (datetime.now(SA_TZ) - incident_datetime).total_seconds() / 60
         )
 
         if age_minutes < 30:
@@ -395,7 +405,7 @@ def pager_match():
 def home():
     selected_region = request.args.get("region", "STATEWIDE")
 
-    now = datetime.now().strftime("%d/%m/%Y %H:%M")
+    now = datetime.now(SA_TZ).strftime("%d/%m/%Y %H:%M")
 
     response = requests.get(
         CFS_INCIDENTS_URL,
