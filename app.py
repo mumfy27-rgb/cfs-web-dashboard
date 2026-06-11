@@ -369,7 +369,7 @@ def pager_match():
             "resources": empty_resources()
         })
 
-    pager_text = fetch_pager_message()
+    pager_text = fetch_pager_messages()
 
     pager_message = find_matching_pager_message(
         pager_text,
