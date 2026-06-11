@@ -16,8 +16,22 @@
         <h1>CFS Incident Dashboard</h1>
 
         <div class="header-right">
-            <p>STATEWIDE</p>
+            {% if selected_region == "STATEWIDE" %}
+                <p>STATEWIDE</p>
+            {% else %}
+                <p>REGION {{ selected_region }}</p>
+            {% endif %}
         </div>
+    </div>
+
+    <div class="region-buttons">
+        <a class="region-button {% if selected_region == 'STATEWIDE' %}active{% endif %}" href="/?region=STATEWIDE">STATEWIDE</a>
+        <a class="region-button {% if selected_region == '1' %}active{% endif %}" href="/?region=1">REGION 1</a>
+        <a class="region-button {% if selected_region == '2' %}active{% endif %}" href="/?region=2">REGION 2</a>
+        <a class="region-button {% if selected_region == '3' %}active{% endif %}" href="/?region=3">REGION 3</a>
+        <a class="region-button {% if selected_region == '4' %}active{% endif %}" href="/?region=4">REGION 4</a>
+        <a class="region-button {% if selected_region == '5' %}active{% endif %}" href="/?region=5">REGION 5</a>
+        <a class="region-button {% if selected_region == '6' %}active{% endif %}" href="/?region=6">REGION 6</a>
     </div>
 
     <div class="main-content">
@@ -28,24 +42,34 @@
 
             <div class="incident-container" id="incidentContainer">
 
-                {% for incident in incidents %}
-                <div class="incident"
-                     onclick='selectCard(this, {{ incident|tojson }})'
-                     style="background-color: {{ incident.CardColour }}">
+                {% if incidents %}
 
-                    <h2>{{ incident.Type }}</h2>
-                    <p>{{ incident.Location_name }}</p>
+                    {% for incident in incidents %}
+                        <div class="incident"
+                             onclick='selectCard(this, {{ incident|tojson }})'
+                             style="background-color: {{ incident.CardColour }}">
 
-                    <p style="color: {{ incident.StatusColour }}">
-                        {{ incident.Status }}
-                    </p>
+                            <h2>{{ incident.Type }}</h2>
+                            <p>{{ incident.Location_name }}</p>
 
-                    <p style="color: {{ incident.AgeColour }}">
-                        Age: {{ incident.Age }}
-                    </p>
+                            <p style="color: {{ incident.StatusColour }}">
+                                {{ incident.Status }}
+                            </p>
 
-                </div>
-                {% endfor %}
+                            <p style="color: {{ incident.AgeColour }}">
+                                Age: {{ incident.Age }}
+                            </p>
+
+                        </div>
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="no-incidents">
+                        <h2>No current incidents in this region.</h2>
+                    </div>
+
+                {% endif %}
 
             </div>
 
@@ -53,22 +77,17 @@
 
         </div>
 
-        <div class="details-map-row">
+        <div class="bottom-panels">
 
-            <div id="details-panel">
+            <div id="resources-panel">
+                <h2>Resources</h2>
 
-                <h2>Incident Details</h2>
-
-                <p id="detail-type">Select an incident</p>
-                <p id="detail-location"></p>
-                <p id="detail-status"></p>
-                <p id="detail-age"></p>
-                <p id="detail-pager"></p>
-
+                <p id="detail-appliances">Appliances: Select an incident</p>
+                <p id="detail-bulk-water">Bulk Water Carriers:</p>
+                <p id="detail-officers">Officers:</p>
             </div>
 
             <div id="map-panel">
-
                 <h2>Map</h2>
 
                 <iframe
@@ -78,7 +97,16 @@
                     style="border:0;"
                     loading="lazy">
                 </iframe>
+            </div>
 
+            <div id="details-panel">
+                <h2>Incident Details</h2>
+
+                <p id="detail-type">Select an incident</p>
+                <p id="detail-location"></p>
+                <p id="detail-status"></p>
+                <p id="detail-age"></p>
+                <p id="detail-pager"></p>
             </div>
 
         </div>
@@ -116,6 +144,15 @@
             document.getElementById("detail-pager").innerText =
                 "Pager Message: searching...";
 
+            document.getElementById("detail-appliances").innerText =
+                "Appliances: searching...";
+
+            document.getElementById("detail-bulk-water").innerText =
+                "Bulk Water Carriers:";
+
+            document.getElementById("detail-officers").innerText =
+                "Officers:";
+
             fetch("/pager-match", {
                 method: "POST",
                 headers: {
@@ -125,12 +162,55 @@
             })
             .then(response => response.json())
             .then(data => {
+
                 document.getElementById("detail-pager").innerText =
                     "Pager Message: " + data.pager_message;
+
+                document.getElementById("detail-appliances").innerText =
+                    "Appliances: " +
+                    (
+                        data.resources &&
+                        data.resources.appliances &&
+                        data.resources.appliances.length
+                            ? data.resources.appliances.join(", ")
+                            : "None"
+                    );
+
+                document.getElementById("detail-bulk-water").innerText =
+                    "Bulk Water Carriers: " +
+                    (
+                        data.resources &&
+                        data.resources.bulk_water_carriers &&
+                        data.resources.bulk_water_carriers.length
+                            ? data.resources.bulk_water_carriers.join(", ")
+                            : "None"
+                    );
+
+                document.getElementById("detail-officers").innerText =
+                    "Officers: " +
+                    (
+                        data.resources &&
+                        data.resources.officers &&
+                        data.resources.officers.length
+                            ? data.resources.officers.join(", ")
+                            : "None"
+                    );
             })
             .catch(error => {
+
+                console.error(error);
+
                 document.getElementById("detail-pager").innerText =
                     "Pager Message: pager lookup failed";
+
+                document.getElementById("detail-appliances").innerText =
+                    "Appliances: None";
+
+                document.getElementById("detail-bulk-water").innerText =
+                    "Bulk Water Carriers: None";
+
+                document.getElementById("detail-officers").innerText =
+                    "Officers: None";
             });
         }
 
