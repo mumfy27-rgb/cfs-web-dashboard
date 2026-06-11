@@ -9,6 +9,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
+from bs4 import BeautifulSoup
+
 
 app = Flask(__name__)
 
@@ -83,57 +85,27 @@ def get_incident_card_colour(incident_type):
     return "#333333"
 
 
-def fetch_pager_message():
-    global last_pager_message, last_pager_fetch_time
-
-    now = time.time()
-
-    if now - last_pager_fetch_time < PAGER_CACHE_SECONDS:
-        print("Pager: returning cached result")
-        return last_pager_message
-
-    if not pager_lock.acquire(blocking=False):
-        print("Pager: lock busy, returning cached result")
-        return last_pager_message
-
-    driver = None
-
+def fetch_pager_messages():
     try:
-        options = webdriver.ChromeOptions()
-        options.add_argument("--headless=new")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--log-level=3")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        url = "http://urgmsg.net/livenosaas/"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
 
-        driver = webdriver.Chrome(
-            service=Service("/usr/bin/chromedriver"),
-            options=options
-        )
+        soup = BeautifulSoup(response.text, "html.parser")
+        text = soup.get_text("\n")
 
-        driver.set_page_load_timeout(20)
-        driver.get(PAGER_URL)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
 
-        time.sleep(5)
+        messages = []
+        for line in lines:
+            if "MFS:" in line or "CFSRES" in line or "NOTIFICATION" in line:
+                messages.append(line)
 
-        body = driver.find_element(By.TAG_NAME, "body").text
+        return messages
 
-        last_pager_message = body
-        last_pager_fetch_time = time.time()
-
-        print("Pager: scrape successful")
-        return body
-
-    except Exception as error:
-        print(f"Pager scrape failed: {error}")
-        return last_pager_message
-
-    finally:
-        if driver is not None:
-            driver.quit()
-        pager_lock.release()
-
-
+    except Exception as e:
+        print("Pager scrape failed:", e)
+        return []
 def build_pager_messages(pager_text):
     messages = []
     current_message = ""
