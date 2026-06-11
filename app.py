@@ -86,6 +86,7 @@ def get_incident_card_colour(incident_type):
 def fetch_pager_messages():
     try:
         url = "http://urgmsg.net/livenosaas/"
+
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
@@ -95,15 +96,23 @@ def fetch_pager_messages():
         lines = [line.strip() for line in text.splitlines() if line.strip()]
 
         messages = []
+
         for line in lines:
-            if "MFS:" in line or "CFSRES" in line or "NOTIFICATION" in line:
+            if (
+                "MFS:" in line
+                or "CFSRES" in line
+                or "NOTIFICATION" in line
+                or "SPRG" in line
+            ):
                 messages.append(line)
 
-        return messages
+        return "\n".join(messages)
 
     except Exception as e:
         print("Pager scrape failed:", e)
-        return []
+        return ""
+
+
 def build_pager_messages(pager_text):
     messages = []
     current_message = ""
@@ -227,23 +236,23 @@ def find_matching_pager_message(pager_text, incident):
     return "No matching pager message found."
 
 def extract_resources_from_pager(pager_message):
-    if pager_message == "No matching pager message found.":
+    if not pager_message or pager_message == "No matching pager message found.":
         return empty_resources()
 
     message = str(pager_message)
 
-    if ": -" in message:
-        message = message.split(": -")[0]
-    elif ":-" in message:
-        message = message.split(":-")[0]
+    # Remove response text at the end
+    for marker in [" - CFS", " - MFS", " - SES"]:
+        if marker in message:
+            message = message.split(marker)[0]
 
-    if ":" not in message:
+    parts = [part.strip() for part in message.split(":") if part.strip()]
+
+    if not parts:
         return empty_resources()
 
-    raw_resources = message.split(":")[-1].strip()
-
-    if not raw_resources:
-        return empty_resources()
+    # Last non-empty colon block is the resource block
+    raw_resources = parts[-1]
 
     tokens = raw_resources.replace(",", " ").replace(";", " ").split()
 
@@ -257,16 +266,12 @@ def extract_resources_from_pager(pager_message):
         if not resource:
             continue
 
-        # Ignore dispatch desk
         if resource.startswith("AIRDESK"):
             continue
 
-        # Ignore bare numbers
         if resource.isdigit():
             continue
 
-        # Accept real-looking resource codes:
-        # WAIKURP, TLEM44, GLWAURP_R, RIDG_BW13, R1_GREEN
         looks_like_resource = (
             any(char.isdigit() for char in resource)
             or "_" in resource
