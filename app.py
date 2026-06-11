@@ -23,6 +23,15 @@ last_pager_fetch_time = 0
 pager_lock = threading.Lock()
 
 
+def get_sa_now_naive():
+    """Return South Australian local time as a naive datetime.
+
+    The CFS feed Date/Time values are plain local wall-clock values, not timezone-aware
+    timestamps. Render runs in UTC, so always compare them to Adelaide wall-clock time.
+    """
+    return datetime.now(SA_TZ).replace(tzinfo=None)
+
+
 def empty_resources():
     return {
         "raw_resources": "No resources found.",
@@ -238,20 +247,25 @@ def find_matching_pager_message(pager_text, incident):
     return "No matching pager message found."
 
 def extract_resources_from_pager(pager_message):
-    if pager_message == "No matching pager message found.":
+    if not pager_message or pager_message == "No matching pager message found.":
         return empty_resources()
 
     message = str(pager_message)
 
-    if ": -" in message:
-        message = message.split(": -")[0]
-    elif ":-" in message:
-        message = message.split(":-")[0]
+    # Remove trailing response text so the last colon block is the appliance/resource block.
+    for marker in [" - CFS", " - MFS", " - SES"]:
+        if marker in message:
+            message = message.split(marker)[0]
 
-    if ":" not in message:
+    # The pager message often ends like:
+    #   ... DETAILS :GRNP44 PTL20_09 : - CFS Lincoln Response
+    # Splitting and ignoring empty colon blocks avoids grabbing the final blank bit.
+    parts = [part.strip() for part in message.split(":") if part.strip()]
+
+    if not parts:
         return empty_resources()
 
-    raw_resources = message.split(":")[-1].strip()
+    raw_resources = parts[-1]
 
     if not raw_resources:
         return empty_resources()
@@ -268,16 +282,16 @@ def extract_resources_from_pager(pager_message):
         if not resource:
             continue
 
-        # Ignore dispatch desk
+        # Ignore dispatch desk / non-appliance codes.
         if resource.startswith("AIRDESK"):
             continue
 
-        # Ignore bare numbers
+        # Ignore bare numbers.
         if resource.isdigit():
             continue
 
         # Accept real-looking resource codes:
-        # WAIKURP, TLEM44, GLWAURP_R, RIDG_BW13, R1_GREEN
+        # WAIKURP, TLEM44, GLWAURP_R, RIDG_BW13, R1_GREEN, PTL20_09
         looks_like_resource = (
             any(char.isdigit() for char in resource)
             or "_" in resource
@@ -306,6 +320,8 @@ def extract_resources_from_pager(pager_message):
         "bulk_water_carriers": bulk_water_carriers,
         "officers": officers
     }
+
+
 def get_incident_age(incident):
     try:
         incident_type = str(incident.get("Type", "")).upper()
@@ -321,11 +337,12 @@ def get_incident_age(incident):
             "%d/%m/%Y %H:%M"
         )
 
-        incident_datetime = incident_datetime.replace(tzinfo=SA_TZ)
-
         age_minutes = int(
-            (datetime.now(SA_TZ) - incident_datetime).total_seconds() / 60
+            (get_sa_now_naive() - incident_datetime).total_seconds() / 60
         )
+
+        if age_minutes < 0:
+            age_minutes = 0
 
         if age_minutes < 60:
             return f"{age_minutes}m"
@@ -354,11 +371,12 @@ def get_incident_age_colour(incident):
             "%d/%m/%Y %H:%M"
         )
 
-        incident_datetime = incident_datetime.replace(tzinfo=SA_TZ)
-
         age_minutes = int(
-            (datetime.now(SA_TZ) - incident_datetime).total_seconds() / 60
+            (get_sa_now_naive() - incident_datetime).total_seconds() / 60
         )
+
+        if age_minutes < 0:
+            age_minutes = 0
 
         if age_minutes < 30:
             return "lime"
