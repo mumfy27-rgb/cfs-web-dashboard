@@ -21,26 +21,6 @@
             {% else %}
                 <p>REGION {{ selected_region }}</p>
             {% endif %}
-
-            <a href="/?region={{ selected_region }}&hide_burns={{ '0' if hide_burns else '1' }}&going_only={{ '1' if going_only else '0' }}">
-                <button>
-                    {% if hide_burns %}
-                        Show Burn Offs
-                    {% else %}
-                        Hide Burn Offs
-                    {% endif %}
-                </button>
-            </a>
-
-            <a href="/?region={{ selected_region }}&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '0' if going_only else '1' }}">
-                <button {% if going_only %}style="outline: 2px solid lime;"{% endif %}>
-                    {% if going_only %}
-                        Show All
-                    {% else %}
-                        Going Only
-                    {% endif %}
-                </button>
-            </a>
         </div>
     </div>
 
@@ -52,6 +32,11 @@
         <a class="region-button {% if selected_region == '4' %}active{% endif %}" href="/?region=4&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 4</a>
         <a class="region-button {% if selected_region == '5' %}active{% endif %}" href="/?region=5&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 5</a>
         <a class="region-button {% if selected_region == '6' %}active{% endif %}" href="/?region=6&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 6</a>
+    </div>
+
+    <div class="region-buttons">
+        <a class="region-button {% if going_only %}active{% endif %}" href="/?region={{ selected_region }}&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '0' if going_only else '1' }}">GOING ONLY</a>
+        <a class="region-button {% if hide_burns %}active{% endif %}" href="/?region={{ selected_region }}&hide_burns={{ '0' if hide_burns else '1' }}&going_only={{ '1' if going_only else '0' }}">HIDE BURNS</a>
     </div>
 
     <div class="main-content">
