@@ -22,7 +22,7 @@
                 <p>REGION {{ selected_region }}</p>
             {% endif %}
 
-            <a href="/?region={{ selected_region }}&hide_burns={{ '0' if hide_burns else '1' }}">
+            <a href="/?region={{ selected_region }}&hide_burns={{ '0' if hide_burns else '1' }}&going_only={{ '1' if going_only else '0' }}">
                 <button>
                     {% if hide_burns %}
                         Show Burn Offs
@@ -31,17 +31,27 @@
                     {% endif %}
                 </button>
             </a>
+
+            <a href="/?region={{ selected_region }}&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '0' if going_only else '1' }}">
+                <button {% if going_only %}style="outline: 2px solid lime;"{% endif %}>
+                    {% if going_only %}
+                        Show All
+                    {% else %}
+                        Going Only
+                    {% endif %}
+                </button>
+            </a>
         </div>
     </div>
 
     <div class="region-buttons">
-        <a class="region-button {% if selected_region == 'STATEWIDE' %}active{% endif %}" href="/?region=STATEWIDE&hide_burns={{ '1' if hide_burns else '0' }}">STATEWIDE</a>
-        <a class="region-button {% if selected_region == '1' %}active{% endif %}" href="/?region=1&hide_burns={{ '1' if hide_burns else '0' }}">REGION 1</a>
-        <a class="region-button {% if selected_region == '2' %}active{% endif %}" href="/?region=2&hide_burns={{ '1' if hide_burns else '0' }}">REGION 2</a>
-        <a class="region-button {% if selected_region == '3' %}active{% endif %}" href="/?region=3&hide_burns={{ '1' if hide_burns else '0' }}">REGION 3</a>
-        <a class="region-button {% if selected_region == '4' %}active{% endif %}" href="/?region=4&hide_burns={{ '1' if hide_burns else '0' }}">REGION 4</a>
-        <a class="region-button {% if selected_region == '5' %}active{% endif %}" href="/?region=5&hide_burns={{ '1' if hide_burns else '0' }}">REGION 5</a>
-        <a class="region-button {% if selected_region == '6' %}active{% endif %}" href="/?region=6&hide_burns={{ '1' if hide_burns else '0' }}">REGION 6</a>
+        <a class="region-button {% if selected_region == 'STATEWIDE' %}active{% endif %}" href="/?region=STATEWIDE&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">STATEWIDE</a>
+        <a class="region-button {% if selected_region == '1' %}active{% endif %}" href="/?region=1&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 1</a>
+        <a class="region-button {% if selected_region == '2' %}active{% endif %}" href="/?region=2&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 2</a>
+        <a class="region-button {% if selected_region == '3' %}active{% endif %}" href="/?region=3&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 3</a>
+        <a class="region-button {% if selected_region == '4' %}active{% endif %}" href="/?region=4&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 4</a>
+        <a class="region-button {% if selected_region == '5' %}active{% endif %}" href="/?region=5&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 5</a>
+        <a class="region-button {% if selected_region == '6' %}active{% endif %}" href="/?region=6&hide_burns={{ '1' if hide_burns else '0' }}&going_only={{ '1' if going_only else '0' }}">REGION 6</a>
     </div>
 
     <div class="main-content">
