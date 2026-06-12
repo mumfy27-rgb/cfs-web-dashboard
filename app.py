@@ -422,6 +422,7 @@ def pager_match():
 @app.route("/")
 def home():
     selected_region = request.args.get("region", "STATEWIDE")
+    hide_burns = request.args.get("hide_burns", "0") == "1"
 
     now = datetime.now(SA_TZ).strftime("%d/%m/%Y %H:%M")
 
@@ -436,6 +437,12 @@ def home():
         incidents = [
             incident for incident in incidents
             if str(incident.get("Region", "")) == selected_region
+        ]
+
+    if hide_burns:
+        incidents = [
+            incident for incident in incidents
+            if "BURN" not in str(incident.get("Type", "")).upper()
         ]
 
     incidents.sort(
@@ -460,7 +467,8 @@ def home():
         "index.html",
         incidents=incidents,
         now=now,
-        selected_region=selected_region
+        selected_region=selected_region,
+        hide_burns=hide_burns
     )
 
 
