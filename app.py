@@ -241,7 +241,7 @@ def find_matching_pager_message(pager_text, incident):
             best_score = score
             best_message = message
 
-    if best_score >= 40:
+    if best_score >= 40 and incident_time in best_message:
         return best_message
 
     return "No matching pager message found."
